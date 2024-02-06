@@ -2,35 +2,16 @@
 import gradio as gr
 import numpy as np
 from PIL import Image
-import base64
-from io import BytesIO
-
-
-def base2pil(base64_string):
-    image_bytes = base64.b64decode(base64_string)
-    image_pil = Image.open(BytesIO(image_bytes))
-    return image_pil
-
-
-def pil2base(image_pil, format="JPEG"):
-    image_bytes = BytesIO()
-    if image_pil.mode.endswith("A"):
-        image_pil.save(image_bytes, format="PNG")
-    else:
-        image_pil.save(image_bytes, format=format)
-    print(image_pil)
-    base64_string = base64.b64decode(image_bytes.getvalue())
-    return base64_string
+import requests
+import json
+from utils import pil_to_bs64, bs64_to_pil
 
 
 def sketches2coordinates(all_layers):
     combined_image = np.zeros_like(all_layers[0])
     for layer in all_layers:
         combined_image += np.array(layer)
-    # import cv2
-    # cv2.imshow("test", combined_image)
-    # cv2.waitKey()
-    # cv2.destroyAllWindows()
+
     non_transparent_pixels = np.column_stack(np.where(combined_image[:, :, 3] > 0))
 
     if len(non_transparent_pixels) > 0:
@@ -42,6 +23,26 @@ def sketches2coordinates(all_layers):
         return [top_left_coords, bottom_right_coords]
     else:
         return all_layers[0].size[::-1]
+
+
+def rgba_to_rgb(img_pil):
+    if img_pil.mode == 'RGBA':
+        img_pil = img_pil.convert('RGB')
+    return img_pil
+    
+    
+def apply_mask_numpy(image_np, mask_np):
+    if image_np.shape[:2] != mask_np.shape[:2]:
+        raise ValueError("Image and mask must have the same shape.")
+
+    if len(mask_np.shape) == 2:
+        mask_np = np.expand_dims(mask_np, axis=2)
+        mask_np = np.repeat(mask_np, 3, axis=2)
+
+    masked_image_np = image_np * (mask_np / 255)
+
+    return masked_image_np.astype(np.uint8)
+
 
 def rgb2palette(palette):
     image_size = (len(palette), 1)
@@ -56,22 +57,22 @@ def checkbox_boolean(checkbox_value):
 
 # Function 1 Outpainting
 def outpaint(img_pil, mask_pil):
-    img_base64 = pil2base(img_pil)
-    mask_base64 = pil2base(mask_pil)
+    img_base64 = pil_to_bs64(img_pil)
+    mask_base64 = pil_to_bs64(mask_pil)
 
     # TODO: Outpainting
     result_base64 = img_base64
-    result_pil = base2pil(result_base64)
+    result_pil = bs64_to_pil(result_base64)
 
     return result_pil
 
 
 # Function 2 Composition
 def composition(img_pil, mask_pil):
-    img_base64 = pil2base(img_pil["background"])
+    img_base64 = pil_to_bs64(img_pil["background"])
     coordinates = sketches2coordinates(img_pil["layers"])
     print(coordinates)
-    mask_base64 = pil2base(mask_pil)
+    mask_base64 = pil_to_bs64(mask_pil)
 
     # TODO: Composition
     result_base64 = None
@@ -82,18 +83,18 @@ def composition(img_pil, mask_pil):
 
 # Function 3-1 Template Augmentation Style
 def template_augmentation_style(img_pil, template_pil):
-    img_base64 = pil2base(img_pil)
-    template_base64 = pil2base(template_pil)
+    img_base64 = pil_to_bs64(img_pil)
+    template_base64 = pil_to_bs64(template_pil)
 
     # TODO: Template Augmentation Style
     result_base64 = None
-    result_pil = base2pil(result_base64)
+    result_pil = bs64_to_pil(result_base64)
     return result_pil
 
 
 # Function 3-2 Template Augmentation Text
 def template_augmentation_text(img_pil, color, concept):
-    img_base64 = pil2base(img_pil)
+    img_base64 = pil_to_bs64(img_pil)
 
     # TODO: Template Augmentation Text
     result = None
@@ -101,29 +102,28 @@ def template_augmentation_text(img_pil, color, concept):
 
 
 # Function 4-1 Remove Background
-def remove_bg(img_pil, post_processing):
-    img_base64 = pil2base(img_pil)
-    coordinates = sketches2coordinates(img_pil["layers"])
+def remove_bg(img_list, post_processing):
+    img_pil = rgba_to_rgb(img_list["background"])
+    img_base64 = pil_to_bs64(img_list["background"].convert("RGB"))
+    coordinates = sketches2coordinates(img_list["layers"])
 
-    # TODO: Remove Background
-    if post_processing:
-        # TODO: post processing
-        pass
-    else:
-        # TODO: without prst processing
-        pass
+    url = 'http://192.168.219.114:8000/utils/remove_bg/'
+    headers = {'Content-Type': 'application/json'}
 
-    mask_base64 = None
-    mask_pil = base2pil(mask_base64)
-    masked_base64 = None
-    masked_pil = base2pil(masked_base64)
+    remove_bg_body = {"image_b64":img_base64, "post_process":post_processing}
+    response = requests.post(url, headers=headers, data=json.dumps({"body":remove_bg_body}))
+
+    mask_base64 = json.loads(json.loads(response.text)["body"])["image_b64"].split("base64,")[1]
+    mask_pil = bs64_to_pil(mask_base64)
+
+    masked_pil = apply_mask_numpy(np.array(img_pil), np.array(mask_pil))
 
     return mask_pil, masked_pil
 
 
 # Function 4-2 Recommend Color
 def color_recommendation(img_pil):
-    img_base64 = pil2base(img_pil)
+    img_base64 = pil_to_bs64(img_pil)
 
     # TODO: Recommend Color
     similar_colors = None
@@ -144,11 +144,11 @@ def color_recommendation(img_pil):
 
 # Function 4-3 Super Resolution
 def super_resolution(img_pil):
-    img_base64 = pil2base(img_pil)
+    img_base64 = pil_to_bs64(img_pil)
 
     # TODO: Super Resolution
     result_base64 = None
-    result_pil = base2pil(result_base64)
+    result_pil = bs64_to_pil(result_base64)
 
     return result_pil
 
