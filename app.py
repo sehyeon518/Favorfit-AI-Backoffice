@@ -1,6 +1,6 @@
 import gradio as gr
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 import base64
 from io import BytesIO
 
@@ -13,11 +13,34 @@ def base2pil(base64_string):
 
 def pil2base(image_pil, format="JPEG"):
     image_bytes = BytesIO()
-    image_pil.save(image_bytes, format=format)
+    if image_pil.mode.endswith("A"):
+        image_pil.save(image_bytes, format="PNG")
+    else:
+        image_pil.save(image_bytes, format=format)
     print(image_pil)
     base64_string = base64.b64decode(image_bytes.getvalue())
     return base64_string
 
+
+def sketches2coordinates(all_layers):
+    combined_image = np.zeros_like(all_layers[0])
+    for layer in all_layers:
+        combined_image += np.array(layer)
+    # import cv2
+    # cv2.imshow("test", combined_image)
+    # cv2.waitKey()
+    # cv2.destroyAllWindows()
+    non_transparent_pixels = np.column_stack(np.where(combined_image[:, :, 3] > 0))
+
+    if len(non_transparent_pixels) > 0:
+        top_left_corner = non_transparent_pixels.min(axis=0)
+        bottom_right_corner = non_transparent_pixels.max(axis=0)
+
+        top_left_coords = (top_left_corner[1], top_left_corner[0])
+        bottom_right_coords = (bottom_right_corner[1], bottom_right_corner[0])
+        return [top_left_coords, bottom_right_coords]
+    else:
+        return all_layers[0].size[::-1]
 
 def rgb2palette(palette):
     image_size = (len(palette), 1)
@@ -44,14 +67,16 @@ def outpaint(img_pil, mask_pil):
 
 # Function 2 Composition
 def composition(img_pil, mask_pil):
-    img_base64 = pil2base(img_pil)
+    img_base64 = pil2base(img_pil["background"])
+    coordinates = sketches2coordinates(img_pil["layers"])
+    print(coordinates)
     mask_base64 = pil2base(mask_pil)
 
     # TODO: Composition
     result_base64 = None
-    result_pil = base2pil(result_base64)
+    # result_pil = base2pil(result_base64)
 
-    return result_pil
+    return img_pil
 
 
 # Function 3-1 Template Augmentation Style
@@ -77,6 +102,7 @@ def template_augmentation_text(img_pil, color, concept):
 # Function 4-1 Remove Background
 def remove_bg(img_pil, post_processing):
     img_base64 = pil2base(img_pil)
+    coordinates = sketches2coordinates(img_pil["layers"])
 
     # TODO: Remove Background
     if post_processing:
@@ -85,10 +111,13 @@ def remove_bg(img_pil, post_processing):
     else:
         # TODO: without prst processing
         pass
-    result_base64 = None
-    result_pil = base2pil(result_base64)
 
-    return result_pil
+    mask_base64 = None
+    mask_pil = base2pil(mask_base64)
+    masked_base64 = None
+    masked_pil = base2pil(masked_base64)
+
+    return mask_pil, masked_pil
 
 
 # Function 4-2 Recommend Color
@@ -146,7 +175,7 @@ with gr.Blocks() as demo:
         iface2 = gr.Interface(
             fn=composition,
             inputs=[
-                gr.Image(type="pil", label="Image"),
+                gr.ImageEditor(type="pil", label="Image"),
                 gr.Image(type="pil", label="Mask"),
             ],
             outputs=gr.Image(type="pil", label="Result"),
@@ -184,10 +213,11 @@ with gr.Blocks() as demo:
             iface4_1 = gr.Interface(
                 fn=remove_bg,
                 inputs=[
-                    gr.Image(type="pil", label="Image"),
+                    gr.ImageEditor(type="pil", label="Image"),
                     gr.Checkbox(label="Post Process"),
                 ],
-                outputs=gr.Image(type="pil", label="Mask"),
+                outputs=[gr.Image(type="pil", label="Mask"),
+                         gr.Image(type="pil", label="Masked Image")],
                 title="Remove Background",
                 allow_flagging="never",
             )
