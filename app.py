@@ -45,10 +45,10 @@ def apply_mask_numpy(image_np, mask_np):
 
 
 def rgb2palette(palette):
-    image_size = (len(palette), 1)
-    image = Image.new("RGB", image_size)
-    image.putdata([tuple(color) for color in palette])
-    return image
+    color_image = np.repeat(palette, 32, axis=0)
+    color_image = np.tile(color_image[np.newaxis, ...], (32, 1, 1))
+
+    return color_image
 
 
 def checkbox_boolean(checkbox_value):
@@ -121,16 +121,25 @@ def remove_bg(img_list, post_processing):
     return mask_pil, masked_pil
 
 
-# Function 4-2 Recommend Color
-def color_recommendation(img_pil):
+# Function 4-2 Recommend Colors
+def color_recommendation(img_pil, mask_pil):
+    img_pil = rgba_to_rgb(img_pil)
     img_base64 = pil_to_bs64(img_pil)
+    
+    mask_base64 = None if mask_pil is None else pil_to_bs64(mask_pil)
 
-    # TODO: Recommend Color
-    similar_colors = None
-    creative_colors = None
-    similar_weights = None
-    creative_weights = None
+    url = 'http://192.168.219.114:8000/utils/recommend_colors/'
+    headers = {'Content-Type': 'application/json'}
+
+    recommend_colors_body = {"image_b64":img_base64, "mask_b64": mask_base64}
+    response = requests.post(url, headers=headers, data=json.dumps({"body":recommend_colors_body}))
+    colors_and_weights = json.loads(json.loads(response.text)["body"])
+    
+    similar_colors = colors_and_weights["similar_colors"]
+    similar_weights = colors_and_weights["similar_weights"]
     similar_palette = rgb2palette(similar_colors)
+    creative_colors = colors_and_weights["creative_colors"]
+    creative_weights = colors_and_weights["creative_weights"]
     creative_palatte = rgb2palette(creative_colors)
     return (
         similar_colors,
@@ -225,7 +234,8 @@ with gr.Blocks() as demo:
 
             iface4_2 = gr.Interface(
                 fn=color_recommendation,
-                inputs=gr.Image(type="pil", label="Image"),
+                inputs=[gr.Image(type="pil", label="Image"),
+                        gr.Image(type="pil", label="Mask")],
                 outputs=[
                     gr.Text(label="Similar Colors"),
                     gr.Text(label="Similar Colors Weight"),
@@ -234,7 +244,7 @@ with gr.Blocks() as demo:
                     gr.Text(label="Creative Colors Weight"),
                     gr.Image(label="Creative Colors Palette"),
                 ],
-                title="Color Recommendation",
+                title="Recommend Colors",
                 allow_flagging="never",
             )
 
