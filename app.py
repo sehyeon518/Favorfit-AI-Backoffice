@@ -1,6 +1,7 @@
+# gradio 4.16.0
 import gradio as gr
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image
 import base64
 from io import BytesIO
 
