@@ -5,6 +5,7 @@ from PIL import Image
 import requests
 import json
 from utils import pil_to_bs64, bs64_to_pil
+import time
 
 
 def sketches2coordinates(all_layers):
@@ -29,8 +30,8 @@ def rgba_to_rgb(img_pil):
     if img_pil.mode == 'RGBA':
         img_pil = img_pil.convert('RGB')
     return img_pil
-    
-    
+
+
 def apply_mask_numpy(image_np, mask_np):
     if image_np.shape[:2] != mask_np.shape[:2]:
         raise ValueError("Image and mask must have the same shape.")
@@ -53,6 +54,23 @@ def rgb2palette(palette):
 
 def checkbox_boolean(checkbox_value):
     return checkbox_value
+
+
+def get_result_with_retry(url, headers, get_result_body, max_retries=3, retry_interval=1):
+    retries = 0
+    print("get image start")
+    while retries < max_retries:
+        try:
+            response = requests.post(url, headers=headers, data=json.dumps({"body": get_result_body}))
+            result_json = json.loads(response.text)["body"]
+            img_base64 = json.loads(result_json)["image_b64"]
+            img_pil = bs64_to_pil(img_base64)
+            return img_pil
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            retries += 1
+            time.sleep(retry_interval)
+    raise TimeoutError("Max retries exceeded")
 
 
 # Function 1 Outpainting
@@ -153,13 +171,30 @@ def color_recommendation(img_pil, mask_pil):
 
 # Function 4-3 Super Resolution
 def super_resolution(img_pil):
+    img_pil = rgba_to_rgb(img_pil)
+    img_np = np.array(img_pil)
+    if(img_np.shape[0] > 512 and img_np.shape[1] > 512):
+        print("Image size too big")
+        return None
+    
     img_base64 = pil_to_bs64(img_pil)
 
-    # TODO: Super Resolution
-    result_base64 = None
-    result_pil = bs64_to_pil(result_base64)
+    url = "http://192.168.219.114:8000/utils/super_resolution/"
+    headers = {'Content-Type': 'application/json'}
 
-    return result_pil
+    super_resolution_body = {"image_b64":img_base64, "request_id":0}
+    response = requests.post(url, headers=headers, data=json.dumps({"body":super_resolution_body}))
+
+    url = "http://192.168.219.114:8000/get_result/"
+    get_result_body = {"request_id": 0}
+    
+    try:
+        result_pil = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=2)
+        return result_pil
+    except TimeoutError as e:
+        print(f"Failed to get result within retries limit: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
 
 # Function 4-4 Color Enhancement
