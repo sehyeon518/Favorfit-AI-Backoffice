@@ -52,10 +52,6 @@ def rgb2palette(palette):
     return color_image
 
 
-def checkbox_boolean(checkbox_value):
-    return checkbox_value
-
-
 def get_result_with_retry(url, headers, get_result_body, max_retries=3, retry_interval=1):
     retries = 0
     print("get image start")
