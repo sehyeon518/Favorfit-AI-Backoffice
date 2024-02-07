@@ -74,10 +74,10 @@ def get_result_with_retry(url, headers, get_result_body, max_retries=3, retry_in
 
 
 # Function 1 Outpainting
-def outpaint(img_pil, mask_pil):
+def outpaint(img_pil, mask_pil, checkbox):
     img_base64 = pil_to_bs64(img_pil)
     mask_base64 = pil_to_bs64(mask_pil)
-    
+
     url = "http://192.168.219.114:8000/diffusion/outpaint/"
     headers = {'Content-Type': 'application/json'}
 
@@ -91,7 +91,19 @@ def outpaint(img_pil, mask_pil):
     try:
         result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=5)
         result_pil = bs64_to_pil(result_base64)
-        return result_pil
+
+        if checkbox == False:
+            return result_pil
+
+        from utils import make_outpaint_condition
+        result_pil = result_pil.resize(img_pil.size)
+        product_pil = make_outpaint_condition(img_pil, mask_pil)
+
+        mask_pil_gray = mask_pil.convert("L")
+        composite_pil = Image.new("RGBA", result_pil.size)
+        composite_pil.paste(result_pil, (0, 0))
+        composite_pil.paste(product_pil, (0, 0), mask_pil_gray)
+        return composite_pil
     except TimeoutError as e:
         print(f"Failed to get result within retries limit: {e}")
     except Exception as e:
@@ -284,6 +296,7 @@ with gr.Blocks() as demo:
             inputs=[
                 gr.Image(type="pil", label="Image", width=width),
                 gr.Image(type="pil", label="Mask", width=width),
+                gr.Checkbox(label="Outpainting Original Product"),
             ],
             outputs=gr.Image(type="pil", label="Result", width=width),
             title="Outpaint",
