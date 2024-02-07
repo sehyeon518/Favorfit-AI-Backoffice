@@ -1,4 +1,5 @@
 # gradio 4.16.0
+import hashlib
 import gradio as gr
 import numpy as np
 from PIL import Image
@@ -80,11 +81,12 @@ def outpaint(img_pil, mask_pil):
     url = "http://192.168.219.114:8000/diffusion/outpaint/"
     headers = {'Content-Type': 'application/json'}
 
-    outpaint_body = {"image_b64":img_base64, "mask_b64":mask_base64, "request_id":1}
+    request_id = hashlib.sha256(img_base64.encode()).hexdigest()
+    outpaint_body = {"image_b64":img_base64, "mask_b64":mask_base64, "request_id":request_id}
     response = requests.post(url, headers=headers, data=json.dumps({"body":outpaint_body}))
 
     url = "http://192.168.219.114:8000/get_result/"
-    get_result_body = {"request_id":1}
+    get_result_body = {"request_id":request_id}
 
     try:
         result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=5)
@@ -108,11 +110,12 @@ def composition(img_list, mask_pil):
     url = 'http://192.168.219.114:8000/diffusion/composition/'
     headers = {'Content-Type': 'application/json'}
 
-    composition_body = {"image_b64":img_base64, "mask_b64":mask_base64, "request_id":2}
+    request_id = hashlib.sha256(img_base64.encode()).hexdigest()
+    composition_body = {"image_b64":img_base64, "mask_b64":mask_base64, "request_id":request_id}
     response = requests.post(url, headers=headers, data=json.dumps({"body":composition_body}))
 
     url = "http://192.168.219.114:8000/get_result/"
-    get_result_body = {"request_id": 2}
+    get_result_body = {"request_id": request_id}
 
     try:
         result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=4)
@@ -134,11 +137,12 @@ def template_augmentation_style(template_pil, style_pil):
     url = "http://192.168.219.114:8000/diffusion/augmentation/style/"
     headers = {"Content-Type": "application/json"}
 
-    augmentation_style_body = {"image_b64_base":template_base64, "image_b64_style":style_base64, "request_id":3}
+    request_id = hashlib.sha256(template_base64.encode()).hexdigest()
+    augmentation_style_body = {"image_b64_base":template_base64, "image_b64_style":style_base64, "request_id":request_id}
     response = requests.post(url, headers=headers, data=json.dumps({"body":augmentation_style_body}))
-    print(response.text)
+
     url = "http://192.168.219.114:8000/get_result/"
-    get_result_body = {"request_id":3}
+    get_result_body = {"request_id":request_id}
 
     try:
         result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=5)
@@ -158,11 +162,12 @@ def template_augmentation_text(img_pil, color, concept):
     url = "http://192.168.219.114:8000/diffusion/augmentation/text/"
     headers = {'Content-Type': 'application/json'}
 
-    augmentation_text_body = {"image_b64":img_base64, "color":color, "concept":concept, "request_id":4}
+    request_id = hashlib.sha256(img_base64.encode()).hexdigest()
+    augmentation_text_body = {"image_b64":img_base64, "color":color, "concept":concept, "request_id":request_id}
     response = requests.post(url, headers=headers, data=json.dumps({"body":augmentation_text_body}))
     print(response.text)
     url = "http://192.168.219.114:8000/get_result/"
-    get_result_body = {"request_id":4}
+    get_result_body = {"request_id":request_id}
 
     try:
         result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=4)
@@ -237,11 +242,12 @@ def super_resolution(img_pil):
     url = "http://192.168.219.114:8000/utils/super_resolution/"
     headers = {'Content-Type': 'application/json'}
 
-    super_resolution_body = {"image_b64":img_base64, "request_id":0}
+    request_id = hashlib.sha256(img_base64.encode()).hexdigest()
+    super_resolution_body = {"image_b64":img_base64, "request_id":request_id}
     response = requests.post(url, headers=headers, data=json.dumps({"body":super_resolution_body}))
 
     url = "http://192.168.219.114:8000/get_result/"
-    get_result_body = {"request_id": 0}
+    get_result_body = {"request_id": request_id}
     
     try:
         result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=4)
