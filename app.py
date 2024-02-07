@@ -132,6 +132,7 @@ def template_augmentation_style(template_pil, style_pil):
     template_pil = rgba_to_rgb(template_pil)
     template_base64 = pil_to_bs64(template_pil)
     style_pil = rgba_to_rgb(style_pil)
+    style_pil = style_pil.resize(template_pil.size)
     style_base64 = pil_to_bs64(style_pil)
 
     url = "http://192.168.219.114:8000/diffusion/augmentation/style/"
