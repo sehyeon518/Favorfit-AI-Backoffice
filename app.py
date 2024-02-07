@@ -125,23 +125,53 @@ def composition(img_list, mask_pil):
 
 
 # Function 3-1 Template Augmentation Style
-def template_augmentation_style(img_pil, template_pil):
-    img_base64 = pil_to_bs64(img_pil)
+def template_augmentation_style(template_pil, style_pil):
+    template_pil = rgba_to_rgb(template_pil)
     template_base64 = pil_to_bs64(template_pil)
+    style_pil = rgba_to_rgb(style_pil)
+    style_base64 = pil_to_bs64(style_pil)
 
-    # TODO: Template Augmentation Style
-    result_base64 = None
-    result_pil = bs64_to_pil(result_base64)
-    return result_pil
+    url = "http://192.168.219.114:8000/diffusion/augmentation/style/"
+    headers = {"Content-Type": "application/json"}
+
+    augmentation_style_body = {"image_b64_base":template_base64, "image_b64_style":style_base64, "request_id":3}
+    response = requests.post(url, headers=headers, data=json.dumps({"body":augmentation_style_body}))
+    print(response.text)
+    url = "http://192.168.219.114:8000/get_result/"
+    get_result_body = {"request_id":3}
+
+    try:
+        result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=5)
+        result_pil = bs64_to_pil(result_base64)
+        return result_pil
+    except TimeoutError as e:
+        print(f"Failed to get result within retries limit: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
 
 # Function 3-2 Template Augmentation Text
 def template_augmentation_text(img_pil, color, concept):
+    img_pil = rgba_to_rgb(img_pil)
     img_base64 = pil_to_bs64(img_pil)
 
-    # TODO: Template Augmentation Text
-    result = None
-    return
+    url = "http://192.168.219.114:8000/diffusion/augmentation/text/"
+    headers = {'Content-Type': 'application/json'}
+
+    augmentation_text_body = {"image_b64":img_base64, "color":color, "concept":concept, "request_id":4}
+    response = requests.post(url, headers=headers, data=json.dumps({"body":augmentation_text_body}))
+    print(response.text)
+    url = "http://192.168.219.114:8000/get_result/"
+    get_result_body = {"request_id":4}
+
+    try:
+        result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=4)
+        result_pil = bs64_to_pil(result_base64)
+        return result_pil
+    except TimeoutError as e:
+        print(f"Failed to get result within retries limit: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
 
 # Function 4-1 Remove Background
@@ -285,7 +315,7 @@ with gr.Blocks() as demo:
                     gr.Text(label="Color"),
                     gr.Text(label="Concept"),
                 ],
-                outputs=gr.Text(label="Result"),
+                outputs=gr.Image(type="pil", label="Result"),
                 title="Template Augmentation Text",
                 allow_flagging="never",
             )
