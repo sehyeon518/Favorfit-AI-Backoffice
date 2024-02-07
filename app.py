@@ -269,16 +269,16 @@ def color_enhancement(img_pil):
 
     return result_pil
 
-
+width = 500
 with gr.Blocks() as demo:
     with gr.Tab("Outpaint"):
         iface1 = gr.Interface(
             fn=outpaint,
             inputs=[
-                gr.Image(type="pil", label="Image"),
-                gr.Image(type="pil", label="Mask"),
+                gr.Image(type="pil", label="Image", width=width),
+                gr.Image(type="pil", label="Mask", width=width),
             ],
-            outputs=gr.Image(type="pil", label="Result"),
+            outputs=gr.Image(type="pil", label="Result", width=width),
             title="Outpaint",
             allow_flagging="never",
         )
@@ -287,10 +287,10 @@ with gr.Blocks() as demo:
         iface2 = gr.Interface(
             fn=composition,
             inputs=[
-                gr.ImageEditor(type="pil", label="Image"),
-                gr.Image(type="pil", label="Mask"),
+                gr.ImageEditor(type="pil", label="Image", width=width),
+                gr.Image(type="pil", label="Mask", width=width),
             ],
-            outputs=gr.Image(type="pil", label="Result"),
+            outputs=gr.Image(type="pil", label="Result", width=width),
             title="Composition",
             allow_flagging="never",
         )
@@ -300,10 +300,10 @@ with gr.Blocks() as demo:
             iface3_1 = gr.Interface(
                 fn=template_augmentation_style,
                 inputs=[
-                    gr.Image(type="pil", label="Template"),
-                    gr.Image(type="pil", label="Style"),
+                    gr.Image(type="pil", label="Template", width=width),
+                    gr.Image(type="pil", label="Style", width=width),
                 ],
-                outputs=gr.Image(type="pil", label="Result"),
+                outputs=gr.Image(type="pil", label="Result", width=width),
                 title="Template Augmentation Style",
                 allow_flagging="never",
             )
@@ -311,11 +311,11 @@ with gr.Blocks() as demo:
             iface3_2 = gr.Interface(
                 fn=template_augmentation_text,
                 inputs=[
-                    gr.Image(type="pil", label="Template"),
+                    gr.Image(type="pil", label="Template", width=width),
                     gr.Text(label="Color"),
                     gr.Text(label="Concept"),
                 ],
-                outputs=gr.Image(type="pil", label="Result"),
+                outputs=gr.Image(type="pil", label="Result", width=width),
                 title="Template Augmentation Text",
                 allow_flagging="never",
             )
@@ -325,26 +325,26 @@ with gr.Blocks() as demo:
             iface4_1 = gr.Interface(
                 fn=remove_bg,
                 inputs=[
-                    gr.ImageEditor(type="pil", label="Image"),
+                    gr.ImageEditor(type="pil", label="Image", width=width),
                     gr.Checkbox(label="Post Process"),
                 ],
-                outputs=[gr.Image(type="pil", label="Mask"),
-                         gr.Image(type="pil", label="Masked Image")],
+                outputs=[gr.Image(type="pil", label="Mask", width=width),
+                         gr.Image(type="pil", label="Masked Image", width=width)],
                 title="Remove Background",
                 allow_flagging="never",
             )
 
             iface4_2 = gr.Interface(
                 fn=color_recommendation,
-                inputs=[gr.Image(type="pil", label="Image"),
-                        gr.Image(type="pil", label="Mask")],
+                inputs=[gr.Image(type="pil", label="Image", width=width),
+                        gr.Image(type="pil", label="Mask", width=width)],
                 outputs=[
                     gr.Text(label="Similar Colors"),
                     gr.Text(label="Similar Colors Weight"),
-                    gr.Image(label="Similar Colors Palette"),
+                    gr.Image(label="Similar Colors Palette", width=width),
                     gr.Text(label="Creative Colors"),
                     gr.Text(label="Creative Colors Weight"),
-                    gr.Image(label="Creative Colors Palette"),
+                    gr.Image(label="Creative Colors Palette", width=width),
                 ],
                 title="Recommend Colors",
                 allow_flagging="never",
@@ -352,15 +352,15 @@ with gr.Blocks() as demo:
 
             iface4_3 = gr.Interface(
                 fn=super_resolution,
-                inputs=gr.Image(type="pil", label="Image"),
-                outputs=gr.Image(type="pil", label="Super Resolution"),
+                inputs=gr.Image(type="pil", label="Image", width=width),
+                outputs=gr.Image(type="pil", label="Super Resolution", width=width),
                 title="Super Resolution",
                 allow_flagging="never",
             )
             iface4_4 = gr.Interface(
                 fn=color_enhancement,
-                inputs=gr.Image(type="pil", label="Image"),
-                outputs=gr.Image(type="pil", label="Enhanced"),
+                inputs=gr.Image(type="pil", label="Image", width=width),
+                outputs=gr.Image(type="pil", label="Enhanced", width=width),
                 title="Color Enhancement",
                 allow_flagging="never",
             )
