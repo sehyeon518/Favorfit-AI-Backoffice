@@ -58,10 +58,11 @@ def get_result_with_retry(url, headers, get_result_body, max_retries=3, retry_in
     while retries < max_retries:
         try:
             response = requests.post(url, headers=headers, data=json.dumps({"body": get_result_body}))
-            result_json = json.loads(response.text)["body"]
-            img_base64 = json.loads(result_json)["image_b64"]
-            img_pil = bs64_to_pil(img_base64)
-            return img_pil
+            result_json = json.loads(json.loads(response.text)["body"])
+            if "image_b64" in result_json:
+                return result_json["image_b64"]
+            elif "image_b64_list" in result_json:
+                return result_json["image_b64_list"][0]
         except Exception as e:
             print(f"An error occurred: {e}")
             retries += 1
@@ -185,7 +186,8 @@ def super_resolution(img_pil):
     get_result_body = {"request_id": 0}
     
     try:
-        result_pil = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=2)
+        result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=2)
+        result_pil = bs64_to_pil(result_base64)
         return result_pil
     except TimeoutError as e:
         print(f"Failed to get result within retries limit: {e}")
