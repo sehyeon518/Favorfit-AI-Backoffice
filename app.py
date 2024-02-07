@@ -81,7 +81,7 @@ def outpaint(img_pil, mask_pil, checkbox):
     # same image, check box changed
     if prev_outpaint.img_pil == img_pil and prev_outpaint.mask_pil == mask_pil:
         prev_outpaint.checkbox = checkbox
-        print("Same Input. checkbox:", checkbox)
+        print("Same Image. Checkbox:", checkbox)
         if checkbox:
             return prev_outpaint.composite_pil
         else:
@@ -309,6 +309,7 @@ with gr.Blocks() as demo:
             ],
             outputs=gr.Image(type="pil", label="Result", width=width),
             title="Outpaint",
+            live=True,
             allow_flagging="never",
         )
 
