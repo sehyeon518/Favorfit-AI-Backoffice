@@ -97,17 +97,31 @@ def outpaint(img_pil, mask_pil):
 
 
 # Function 2 Composition
-def composition(img_pil, mask_pil):
-    img_base64 = pil_to_bs64(img_pil["background"])
-    coordinates = sketches2coordinates(img_pil["layers"])
-    print(coordinates)
+def composition(img_list, mask_pil):
+    img_pil = rgba_to_rgb(img_list["background"])
+    img_base64 = pil_to_bs64(img_pil)
+    mask_pil = rgba_to_rgb(mask_pil)
     mask_base64 = pil_to_bs64(mask_pil)
 
-    # TODO: Composition
-    result_base64 = None
-    # result_pil = base2pil(result_base64)
+    coordinates = sketches2coordinates(img_list["layers"])
 
-    return img_pil
+    url = 'http://192.168.219.114:8000/diffusion/composition/'
+    headers = {'Content-Type': 'application/json'}
+
+    composition_body = {"image_b64":img_base64, "mask_b64":mask_base64, "request_id":2}
+    response = requests.post(url, headers=headers, data=json.dumps({"body":composition_body}))
+
+    url = "http://192.168.219.114:8000/get_result/"
+    get_result_body = {"request_id": 2}
+
+    try:
+        result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=4)
+        result_pil = bs64_to_pil(result_base64)
+        return result_pil
+    except TimeoutError as e:
+        print(f"Failed to get result within retries limit: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
 
 # Function 3-1 Template Augmentation Style
@@ -133,7 +147,7 @@ def template_augmentation_text(img_pil, color, concept):
 # Function 4-1 Remove Background
 def remove_bg(img_list, post_processing):
     img_pil = rgba_to_rgb(img_list["background"])
-    img_base64 = pil_to_bs64(img_list["background"].convert("RGB"))
+    img_base64 = pil_to_bs64(img_pil)
     coordinates = sketches2coordinates(img_list["layers"])
 
     url = 'http://192.168.219.114:8000/utils/remove_bg/'
