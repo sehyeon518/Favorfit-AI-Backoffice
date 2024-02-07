@@ -164,8 +164,19 @@ def super_resolution(img_pil):
 
 # Function 4-4 Color Enhancement
 def color_enhancement(img_pil):
-    result_np = None
-    return result_np
+    img_pil = rgba_to_rgb(img_pil)
+    img_base64 = pil_to_bs64(img_pil)
+
+    url = 'http://192.168.219.114:8000/utils/color_enhancement/'
+    headers = {'Content-Type': 'application/json'}
+
+    color_enhancement_body = {"image_b64":img_base64, "gamma":0.75, "factor":1.2}
+    response = requests.post(url, headers=headers, data=json.dumps({"body":color_enhancement_body}))
+
+    result_base64 = json.loads(json.loads(response.text)["body"])["image_b64"]
+    result_pil = bs64_to_pil(result_base64)
+
+    return result_pil
 
 
 with gr.Blocks() as demo:
