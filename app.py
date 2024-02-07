@@ -5,6 +5,7 @@ import numpy as np
 from PIL import Image
 import requests
 import json
+from Outpaint import Outpaint
 from utils import pil_to_bs64, bs64_to_pil
 import time
 
@@ -74,7 +75,18 @@ def get_result_with_retry(url, headers, get_result_body, max_retries=3, retry_in
 
 
 # Function 1 Outpainting
+prev_outpaint = Outpaint()
 def outpaint(img_pil, mask_pil, checkbox):
+    global prev_outpaint
+    # same image, check box changed
+    if prev_outpaint.img_pil == img_pil and prev_outpaint.mask_pil == mask_pil:
+        prev_outpaint.checkbox = checkbox
+        print("Same Input. checkbox:", checkbox)
+        if checkbox:
+            return prev_outpaint.composite_pil
+        else:
+            return prev_outpaint.result_pil
+
     img_base64 = pil_to_bs64(img_pil)
     mask_base64 = pil_to_bs64(mask_pil)
 
@@ -91,19 +103,16 @@ def outpaint(img_pil, mask_pil, checkbox):
     try:
         result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=5)
         result_pil = bs64_to_pil(result_base64)
-
-        if checkbox == False:
-            return result_pil
-
-        from utils import make_outpaint_condition
         result_pil = result_pil.resize(img_pil.size)
-        product_pil = make_outpaint_condition(img_pil, mask_pil)
 
-        mask_pil_gray = mask_pil.convert("L")
-        composite_pil = Image.new("RGBA", result_pil.size)
-        composite_pil.paste(result_pil, (0, 0))
-        composite_pil.paste(product_pil, (0, 0), mask_pil_gray)
-        return composite_pil
+        prev_outpaint.img_pil = img_pil
+        prev_outpaint.mask_pil = mask_pil
+        prev_outpaint.result_pil = result_pil
+        prev_outpaint.product_pil = prev_outpaint.get_product_pil()
+        prev_outpaint.composite_pil = prev_outpaint.outpaint_origin_product()
+        prev_outpaint.checkbox = checkbox
+        
+        return prev_outpaint.composite_pil if checkbox else prev_outpaint.result_pil
     except TimeoutError as e:
         print(f"Failed to get result within retries limit: {e}")
     except Exception as e:
@@ -373,7 +382,7 @@ with gr.Blocks() as demo:
             iface4_3 = gr.Interface(
                 fn=super_resolution,
                 inputs=gr.Image(type="pil", label="Image", width=width),
-                outputs=gr.Image(type="pil", label="Super Resolution", width=width),
+                outputs=gr.Image(type="pil", label="Super Resolution", width=1000),
                 title="Super Resolution",
                 allow_flagging="never",
             )
