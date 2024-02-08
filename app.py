@@ -53,6 +53,20 @@ def rgb2palette(palette):
     return color_image
 
 
+def resize512(img_pil):
+    width, height = img_pil.size
+
+    if width < height:
+        new_width = 512
+        new_height = int(height * (512 / width))
+    else:
+        new_height = 512
+        new_width = int(width * (512 / height))
+
+    resized_img = img_pil.resize((new_width, new_height))
+    return resized_img
+
+
 def get_result_with_retry(url, headers, get_result_body, max_retries=3, retry_interval=4):
     retries = 0
     print("get image start")
@@ -200,6 +214,7 @@ def template_augmentation_text(img_pil, color, concept):
 # Function 4-1 Remove Background
 def remove_bg(img_list, post_processing):
     img_pil = rgba_to_rgb(img_list["background"])
+    img_pil = resize512(img_pil)
     img_base64 = pil_to_bs64(img_pil)
     coordinates = sketches2coordinates(img_list["layers"])
 
@@ -213,16 +228,16 @@ def remove_bg(img_list, post_processing):
     mask_pil = bs64_to_pil(mask_base64)
 
     masked_pil = apply_mask_numpy(np.array(img_pil), np.array(mask_pil))
-
     return mask_pil, masked_pil
 
 
 # Function 4-2 Recommend Colors
 def color_recommendation(img_pil, mask_pil):
     img_pil = rgba_to_rgb(img_pil)
+    img_pil = resize512(img_pil)
     img_base64 = pil_to_bs64(img_pil)
     
-    mask_base64 = None if mask_pil is None else pil_to_bs64(mask_pil)
+    mask_base64 = None if mask_pil is None else pil_to_bs64(resize512(mask_pil))
 
     url = 'http://192.168.219.114:8000/utils/recommend_colors/'
     headers = {'Content-Type': 'application/json'}
@@ -280,6 +295,7 @@ def super_resolution(img_pil):
 # Function 4-4 Color Enhancement
 def color_enhancement(img_pil):
     img_pil = rgba_to_rgb(img_pil)
+    img_pil = resize512(img_pil)
     img_base64 = pil_to_bs64(img_pil)
 
     url = 'http://192.168.219.114:8000/utils/color_enhancement/'
@@ -392,4 +408,4 @@ with gr.Blocks() as demo:
                 allow_flagging="never",
             )
 
-demo.launch()
+demo.launch(share=True)
