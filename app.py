@@ -10,21 +10,21 @@ import time
 
 
 def sketches2coordinates(all_layers):
-    combined_image = np.zeros_like(all_layers[0])
+    combined_image = np.zeros_like(resize512(all_layers[0]))
     for layer in all_layers:
+        layer = resize512(layer)
         combined_image += np.array(layer)
 
     non_transparent_pixels = np.column_stack(np.where(combined_image[:, :, 3] > 0))
 
     if len(non_transparent_pixels) > 0:
-        top_left_corner = non_transparent_pixels.min(axis=0)
-        bottom_right_corner = non_transparent_pixels.max(axis=0)
+        top_left_corner = non_transparent_pixels.min(axis=0).tolist()
+        bottom_right_corner = non_transparent_pixels.max(axis=0).tolist()
 
-        top_left_coords = (top_left_corner[1], top_left_corner[0])
-        bottom_right_coords = (bottom_right_corner[1], bottom_right_corner[0])
-        return [top_left_coords, bottom_right_coords]
+        return [top_left_corner[1], top_left_corner[0], bottom_right_corner[1], bottom_right_corner[0]]
     else:
-        return all_layers[0].size[::-1]
+        bottom_right = all_layers[0].size
+        return [0, 0, bottom_right[0], bottom_right[1]]
 
 
 def rgba_to_rgb(img_pil):
@@ -91,6 +91,8 @@ def get_result_with_retry(url, headers, get_result_body, max_retries=3, retry_in
 
 # Function 1 Outpainting
 def outpaint(img_pil, mask_pil, checkbox):
+    if img_pil.size != mask_pil.size:
+        mask_pil = mask_pil.resize(img_pil.size)
     img_base64 = pil_to_bs64(img_pil)
     mask_base64 = pil_to_bs64(mask_pil)
 
@@ -130,13 +132,15 @@ def switch_origin_product(img_a, img_b):
 
 
 # Function 2 Composition
-def composition(img_list, mask_pil):
-    img_pil = rgba_to_rgb(img_list["background"])
-    img_base64 = pil_to_bs64(img_pil)
+def composition(img_pil, mask_pil):
+    img_pil = rgba_to_rgb(img_pil)
     mask_pil = rgba_to_rgb(mask_pil)
-    mask_base64 = pil_to_bs64(mask_pil)
 
-    coordinates = sketches2coordinates(img_list["layers"])
+    if img_pil.size != mask_pil:
+        mask_pil = mask_pil.resize(img_pil.size)
+
+    img_base64 = pil_to_bs64(img_pil)
+    mask_base64 = pil_to_bs64(mask_pil)
 
     url = 'http://192.168.219.114:8000/diffusion/composition/'
     headers = {'Content-Type': 'application/json'}
@@ -221,7 +225,7 @@ def remove_bg(img_list, post_processing):
     url = 'http://192.168.219.114:8000/utils/remove_bg/'
     headers = {'Content-Type': 'application/json'}
 
-    remove_bg_body = {"image_b64":img_base64, "post_process":post_processing}
+    remove_bg_body = {"image_b64":img_base64, "post_process":post_processing, "box":coordinates}
     response = requests.post(url, headers=headers, data=json.dumps({"body":remove_bg_body}))
 
     mask_base64 = json.loads(json.loads(response.text)["body"])["image_b64"].split("base64,")[1]
@@ -234,7 +238,14 @@ def remove_bg(img_list, post_processing):
 # Function 4-2 Recommend Colors
 def color_recommendation(img_pil, mask_pil):
     img_pil = rgba_to_rgb(img_pil)
-    img_pil = resize512(img_pil)
+    
+    if img_pil.size != mask_pil.size:
+        img_pil = resize512(img_pil)
+        mask_pil = mask_pil.resize(img_pil.size)
+    else:
+        img_pil = resize512(img_pil)
+        mask_pil = resize512(img_pil)
+    
     img_base64 = pil_to_bs64(img_pil)
     
     mask_base64 = None if mask_pil is None else pil_to_bs64(resize512(mask_pil))
@@ -320,7 +331,7 @@ with gr.Blocks() as demo:
                     mask_pil = gr.Image(type="pil", label="Mask", width=width)
                     submit = gr.Button(value="Submit", variant="primary")
                 with gr.Column():
-                    result_pil = gr.Image(type="pil", label="Result", width=width)
+                    result_pil = gr.Image(type="pil", label="Result", width=width, interactive=False)
                     checkbox = gr.Checkbox(label="Outpainting Original Product", visible=False)
                     substitute = gr.Image(type="pil", label="substitute", visible=False)
             submit.click(outpaint, [img_pil, mask_pil, checkbox], [result_pil, substitute, checkbox])
@@ -330,7 +341,7 @@ with gr.Blocks() as demo:
         iface2 = gr.Interface(
             fn=composition,
             inputs=[
-                gr.ImageEditor(type="pil", label="Image", width=width),
+                gr.Image(type="pil", label="Image", width=width),
                 gr.Image(type="pil", label="Mask", width=width),
             ],
             outputs=gr.Image(type="pil", label="Result", width=width),
@@ -408,4 +419,4 @@ with gr.Blocks() as demo:
                 allow_flagging="never",
             )
 
-demo.launch(share=True)
+demo.launch()
