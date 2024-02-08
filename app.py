@@ -5,8 +5,7 @@ import numpy as np
 from PIL import Image
 import requests
 import json
-from Outpaint import Outpaint
-from utils import pil_to_bs64, bs64_to_pil
+from utils import make_outpaint_condition, pil_to_bs64, bs64_to_pil
 import time
 
 
@@ -75,18 +74,7 @@ def get_result_with_retry(url, headers, get_result_body, max_retries=3, retry_in
 
 
 # Function 1 Outpainting
-prev_outpaint = Outpaint()
 def outpaint(img_pil, mask_pil, checkbox):
-    global prev_outpaint
-    # same image, check box changed
-    if prev_outpaint.img_pil == img_pil and prev_outpaint.mask_pil == mask_pil:
-        prev_outpaint.checkbox = checkbox
-        print("Same Image. Checkbox:", checkbox)
-        if checkbox:
-            return prev_outpaint.composite_pil
-        else:
-            return prev_outpaint.result_pil
-
     img_base64 = pil_to_bs64(img_pil)
     mask_base64 = pil_to_bs64(mask_pil)
 
@@ -105,18 +93,23 @@ def outpaint(img_pil, mask_pil, checkbox):
         result_pil = bs64_to_pil(result_base64)
         result_pil = result_pil.resize(img_pil.size)
 
-        prev_outpaint.img_pil = img_pil
-        prev_outpaint.mask_pil = mask_pil
-        prev_outpaint.result_pil = result_pil
-        prev_outpaint.product_pil = prev_outpaint.get_product_pil()
-        prev_outpaint.composite_pil = prev_outpaint.outpaint_origin_product()
-        prev_outpaint.checkbox = checkbox
-        
-        return prev_outpaint.composite_pil if checkbox else prev_outpaint.result_pil
+        product_pil = make_outpaint_condition(img_pil, mask_pil)
+        mask_pil_gray = mask_pil.convert("L")
+        composite_pil = Image.new("RGBA", result_pil.size)
+        composite_pil.paste(result_pil, (0,0))
+        composite_pil.paste(product_pil, (0,0), mask_pil_gray)
+       
+        if checkbox:
+            return composite_pil, result_pil, gr.Checkbox(label="Outpainting Original Product", visible=True, value=True)
+        return result_pil, composite_pil, gr.Checkbox(label="Outpainting Original Product", visible=True, value=False)
     except TimeoutError as e:
         print(f"Failed to get result within retries limit: {e}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+
+
+def switch_origin_product(img_a, img_b):
+    return img_b, img_a
 
 
 # Function 2 Composition
@@ -297,21 +290,22 @@ def color_enhancement(img_pil):
 
     return result_pil
 
+
 width = 500
 with gr.Blocks() as demo:
     with gr.Tab("Outpaint"):
-        iface1 = gr.Interface(
-            fn=outpaint,
-            inputs=[
-                gr.Image(type="pil", label="Image", width=width),
-                gr.Image(type="pil", label="Mask", width=width),
-                gr.Checkbox(label="Outpainting Original Product"),
-            ],
-            outputs=gr.Image(type="pil", label="Result", width=width),
-            title="Outpaint",
-            live=True,
-            allow_flagging="never",
-        )
+        with gr.Blocks():
+            with gr.Row():
+                with gr.Column():
+                    img_pil = gr.Image(type="pil", label="Image", width=width)
+                    mask_pil = gr.Image(type="pil", label="Mask", width=width)
+                    submit = gr.Button(value="Submit", variant="primary")
+                with gr.Column():
+                    result_pil = gr.Image(type="pil", label="Result", width=width)
+                    checkbox = gr.Checkbox(label="Outpainting Original Product", visible=False)
+                    substitute = gr.Image(type="pil", label="substitute", visible=False)
+            submit.click(outpaint, [img_pil, mask_pil, checkbox], [result_pil, substitute, checkbox])
+            checkbox.select(switch_origin_product, [result_pil, substitute], [result_pil, substitute])
 
     with gr.Tab("Composition"):
         iface2 = gr.Interface(
