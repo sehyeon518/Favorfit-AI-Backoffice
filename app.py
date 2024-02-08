@@ -61,8 +61,10 @@ def get_result_with_retry(url, headers, get_result_body, max_retries=3, retry_in
             response = requests.post(url, headers=headers, data=json.dumps({"body": get_result_body}))
             result_json = json.loads(json.loads(response.text)["body"])
             if "image_b64" in result_json:
+                print("Request Succeed!")
                 return result_json["image_b64"]
             elif "image_b64_list" in result_json:
+                print("Request Succeed!")
                 return result_json["image_b64_list"][0]
             else:
                 raise Exception("Any Elements in result")
@@ -91,10 +93,11 @@ def outpaint(img_pil, mask_pil, checkbox):
     try:
         result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=5)
         result_pil = bs64_to_pil(result_base64)
-        result_pil = result_pil.resize(img_pil.size)
 
         product_pil = make_outpaint_condition(img_pil, mask_pil)
-        mask_pil_gray = mask_pil.convert("L")
+        product_pil = product_pil.resize(result_pil.size)
+        
+        mask_pil_gray = mask_pil.resize(result_pil.size).convert("L")
         composite_pil = Image.new("RGBA", result_pil.size)
         composite_pil.paste(result_pil, (0,0))
         composite_pil.paste(product_pil, (0,0), mask_pil_gray)
@@ -180,7 +183,7 @@ def template_augmentation_text(img_pil, color, concept):
     request_id = hashlib.sha256(img_base64.encode()).hexdigest()
     augmentation_text_body = {"image_b64":img_base64, "color":color, "concept":concept, "request_id":request_id}
     response = requests.post(url, headers=headers, data=json.dumps({"body":augmentation_text_body}))
-    print(response.text)
+
     url = "http://192.168.219.114:8000/get_result/"
     get_result_body = {"request_id":request_id}
 
