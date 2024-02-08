@@ -343,6 +343,7 @@ width = 500
 with gr.Blocks() as demo:
     with gr.Tab("Outpaint"):
         with gr.Blocks():
+            gr.Markdown("""# Outpaint""")
             with gr.Row():
                 with gr.Column():
                     img_pil = gr.Image(type="pil", label="Image", width=width)
@@ -357,6 +358,7 @@ with gr.Blocks() as demo:
 
     with gr.Tab("Composition"):
         with gr.Blocks():
+            gr.Markdown("""# Composition""")
             with gr.Row():
                 with gr.Column():
                     img_pil = gr.Image(type="pil", label="Image", width=width)
@@ -408,29 +410,14 @@ with gr.Blocks() as demo:
                 allow_flagging="never",
             )
 
-            iface4_2 = gr.Interface(
-                fn=color_recommendation,
-                inputs=[gr.Image(type="pil", label="Image", width=width),
-                        gr.Image(type="pil", label="Mask", width=width)],
-                outputs=[
-                    gr.Text(label="Similar Colors"),
-                    gr.Text(label="Similar Colors Weight"),
-                    gr.Image(label="Similar Colors Palette", width=width),
-                    gr.Text(label="Creative Colors"),
-                    gr.Text(label="Creative Colors Weight"),
-                    gr.Image(label="Creative Colors Palette", width=width),
-                ],
-                title="Recommend Colors",
-                allow_flagging="never",
-            )
+            # iface4_3 = gr.Interface(
+            #     fn=super_resolution,
+            #     inputs=gr.Image(type="pil", label="Image", width=width),
+            #     outputs=gr.Image(type="pil", label="Super Resolution", width=1000),
+            #     title="Super Resolution",
+            #     allow_flagging="never",
+            # )
 
-            iface4_3 = gr.Interface(
-                fn=super_resolution,
-                inputs=gr.Image(type="pil", label="Image", width=width),
-                outputs=gr.Image(type="pil", label="Super Resolution", width=1000),
-                title="Super Resolution",
-                allow_flagging="never",
-            )
             iface4_4 = gr.Interface(
                 fn=color_enhancement,
                 inputs=gr.Image(type="pil", label="Image", width=width),
