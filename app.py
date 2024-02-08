@@ -33,6 +33,13 @@ def rgba_to_rgb(img_pil):
     return img_pil
 
 
+def reverse_mask(img_pil):
+    mask = np.array(img_pil)
+    reverse = 255 - mask
+
+    return Image.fromarray(reverse).convert("RGB")
+
+
 def apply_mask_numpy(image_np, mask_np):
     if image_np.shape[:2] != mask_np.shape[:2]:
         raise ValueError("Image and mask must have the same shape.")
@@ -135,6 +142,7 @@ def switch_origin_product(img_a, img_b):
 def composition(img_pil, mask_pil):
     img_pil = rgba_to_rgb(img_pil)
     mask_pil = rgba_to_rgb(mask_pil)
+    mask_pil = reverse_mask(mask_pil)
 
     if img_pil.size != mask_pil:
         mask_pil = mask_pil.resize(img_pil.size)
