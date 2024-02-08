@@ -139,16 +139,16 @@ def switch_origin_product(img_a, img_b):
 
 
 # Function 2 Composition
-def composition(img_pil, mask_pil):
+def composition(img_pil, mask_pil, checkbox):
     img_pil = rgba_to_rgb(img_pil)
     mask_pil = rgba_to_rgb(mask_pil)
-    mask_pil = reverse_mask(mask_pil)
+    mask_pil_reverse = reverse_mask(mask_pil)
 
     if img_pil.size != mask_pil:
         mask_pil = mask_pil.resize(img_pil.size)
 
     img_base64 = pil_to_bs64(img_pil)
-    mask_base64 = pil_to_bs64(mask_pil)
+    mask_base64 = pil_to_bs64(mask_pil_reverse)
 
     url = 'http://192.168.219.114:8000/diffusion/composition/'
     headers = {'Content-Type': 'application/json'}
@@ -163,7 +163,17 @@ def composition(img_pil, mask_pil):
     try:
         result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=4)
         result_pil = bs64_to_pil(result_base64)
-        return result_pil
+
+        product_pil = make_outpaint_condition(img_pil, mask_pil).resize(result_pil.size)
+        
+        mask_pil_gray = mask_pil.resize(result_pil.size).convert("L")
+        composite_pil = Image.new("RGBA", result_pil.size)
+        composite_pil.paste(result_pil, (0,0))
+        composite_pil.paste(product_pil, (0,0), mask_pil_gray)
+
+        if checkbox:
+            return composite_pil, result_pil, gr.Checkbox(label="Composition Original Product", visible=True, value=True)
+        return result_pil, composite_pil, gr.Checkbox(label="Composition Original Product", visible=True, value=False)
     except TimeoutError as e:
         print(f"Failed to get result within retries limit: {e}")
     except Exception as e:
@@ -346,16 +356,18 @@ with gr.Blocks() as demo:
             checkbox.select(switch_origin_product, [result_pil, substitute], [result_pil, substitute])
 
     with gr.Tab("Composition"):
-        iface2 = gr.Interface(
-            fn=composition,
-            inputs=[
-                gr.Image(type="pil", label="Image", width=width),
-                gr.Image(type="pil", label="Mask", width=width),
-            ],
-            outputs=gr.Image(type="pil", label="Result", width=width),
-            title="Composition",
-            allow_flagging="never",
-        )
+        with gr.Blocks():
+            with gr.Row():
+                with gr.Column():
+                    img_pil = gr.Image(type="pil", label="Image", width=width)
+                    mask_pil = gr.Image(type="pil", label="Mask", width=width)
+                    submit = gr.Button(value="Submit", variant="primary")
+                with gr.Column():
+                    result_pil = gr.Image(type="pil", label="Result", width=width, interactive=False)
+                    checkbox = gr.Checkbox(label="Composition Original Product", visible=False)
+                    substitute = gr.Image(type="pil", label="substitute", visible=False)
+            submit.click(composition, [img_pil, mask_pil, checkbox], [result_pil, substitute, checkbox])
+            checkbox.select(switch_origin_product, [result_pil, substitute], [result_pil, substitute])
 
     with gr.Tab("Augmentation"):
         with gr.Column():
