@@ -344,6 +344,12 @@ with gr.Blocks() as demo:
     with gr.Tab("Outpaint"):
         with gr.Blocks():
             gr.Markdown("""# Outpaint""")
+            with gr.Accordion("""Outpaint""", open=False):
+                gr.Markdown(
+                    """
+                    ![outpaint](https://github.com/sehyeon518/Favorfit-Gradio/assets/84698896/8bc3ce6f-15dc-462b-a6c8-7702f23ba317)
+                    """
+                )
             with gr.Row():
                 with gr.Column():
                     img_pil = gr.Image(type="pil", label="Image", width=width)
@@ -359,6 +365,12 @@ with gr.Blocks() as demo:
     with gr.Tab("Composition"):
         with gr.Blocks():
             gr.Markdown("""# Composition""")
+            with gr.Accordion("""Composition""", open=False):
+                gr.Markdown(
+                    """
+                    ![composition](https://github.com/sehyeon518/Favorfit-Gradio/assets/84698896/60f15213-03de-458c-bad4-038f8080a1c9)
+                    """
+                )
             with gr.Row():
                 with gr.Column():
                     img_pil = gr.Image(type="pil", label="Image", width=width)
@@ -373,73 +385,107 @@ with gr.Blocks() as demo:
 
     with gr.Tab("Augmentation"):
         with gr.Column():
-            iface3_1 = gr.Interface(
-                fn=template_augmentation_style,
-                inputs=[
-                    gr.Image(type="pil", label="Template", width=width),
-                    gr.Image(type="pil", label="Style", width=width),
-                ],
-                outputs=gr.Image(type="pil", label="Result", width=width),
-                title="Template Augmentation Style",
-                allow_flagging="never",
-            )
-
-            iface3_2 = gr.Interface(
-                fn=template_augmentation_text,
-                inputs=[
-                    gr.Image(type="pil", label="Template", width=width),
-                    gr.Text(label="Color"),
-                    gr.Text(label="Concept"),
-                ],
-                outputs=gr.Image(type="pil", label="Result", width=width),
-                title="Template Augmentation Text",
-                allow_flagging="never",
-            )
+            gr.Markdown("""# Template Augmentation Style""")
+            with gr.Accordion("""Template Augmentation - Style""", open=False):
+                gr.Markdown(
+                    """
+                    ![augmentation_style](https://github.com/sehyeon518/Favorfit-Gradio/assets/84698896/aeaf3259-e393-4d9d-8471-422bf125c89b)
+                    """
+                )     
+            with gr.Row():
+                with gr.Column():
+                    img_pil = gr.Image(type="pil", label="Template", width=width)
+                    style_pil = gr.Image(type="pil", label="Style", width=width)
+                    submit = gr.Button(value="Submit", variant="primary")
+                with gr.Column():
+                    result_pil = gr.Image(type="pil", label="Result", width=width)
+                submit.click(template_augmentation_style, [img_pil, style_pil], result_pil)
+            
+            gr.Markdown("""# Template Augmentation Text""")
+            with gr.Accordion("""Template Augmentation - Text""", open=False):
+                gr.Markdown(
+                    """
+                    ![augmentation_text](https://github.com/sehyeon518/Favorfit-Gradio/assets/84698896/6cf96628-b5a1-466f-a82c-707a93cf0fbc)
+                    """
+                )
+            with gr.Row():
+                with gr.Column():
+                    img_pil = gr.Image(type="pil", label="Template", width=width)
+                    color_txt = gr.Text(label="Color")
+                    concept_txt = gr.Text(label="Concept")
+                    submit = gr.Button(value="Submit", variant="primary")
+                with gr.Column():
+                    result_pil = gr.Image(type="pil", label="Result", width=width)
+                submit.click(template_augmentation_text, [img_pil, color_txt, concept_txt], result_pil)
 
     with gr.Tab("Features"):
         with gr.Column():
-            iface4_1 = gr.Interface(
-                fn=remove_bg,
-                inputs=[
-                    gr.ImageEditor(type="pil", label="Image", width=width),
-                    gr.Checkbox(label="Post Process"),
-                ],
-                outputs=[gr.Image(type="pil", label="Mask", width=width),
-                         gr.Image(type="pil", label="Masked Image", width=width)],
-                title="Remove Background",
-                allow_flagging="never",
-            )
+            gr.Markdown("""# Remove Background""")
+            with gr.Accordion("""Remove Background""", open=False):
+                gr.Markdown(
+                    """
+                    ![remove_background](https://github.com/sehyeon518/Favorfit-Gradio/assets/84698896/9dad4f24-2dbe-4c26-8b7c-f9e76b7daae3)
+                    """
+                )
+            with gr.Row():
+                with gr.Column():
+                    img_pil = gr.ImageEditor(type="pil", label="Image", width=width)
+                    checkbox = gr.Checkbox(label="Post Process")
+                    submit = gr.Button(value="Submit", variant="primary")
+                with gr.Column():
+                    mask_pil = gr.Image(type="pil", label="Mask", width=width)
+                    masked_pil = gr.Image(type="pil", label="Masked Image", width=width)
+                submit.click(template_augmentation_text, [img_pil, checkbox], [mask_pil, masked_pil])
 
-            iface4_2 = gr.Interface(
-                fn=color_recommendation,
-                inputs=[gr.Image(type="pil", label="Image", width=width),
-                        gr.Image(type="pil", label="Mask", width=width)],
-                outputs=[
-                    gr.Text(label="Similar Colors"),
-                    gr.Text(label="Similar Colors Weight"),
-                    gr.Image(label="Similar Colors Palette", width=width),
-                    gr.Text(label="Creative Colors"),
-                    gr.Text(label="Creative Colors Weight"),
-                    gr.Image(label="Creative Colors Palette", width=width),
-                ],
-                title="Recommend Colors",
-                allow_flagging="never",
-            )
+            gr.Markdown("""# Recommend Colors""")
+            with gr.Accordion("""Recommend Colors""", open=False):
+                gr.Markdown(
+                    """
+                    ![recommend_colors](https://github.com/sehyeon518/Favorfit-Gradio/assets/84698896/8b15b971-8ab6-4dd0-b4e5-179a7b7d2444)
+                    """
+                )
+            with gr.Row():
+                with gr.Column():
+                    img_pil = gr.Image(type="pil", label="Image", width=width)
+                    mask_pil = gr.Image(type="pil", label="Mask", width=width)
+                    submit = gr.Button(value="Submit", variant="primary")
+                with gr.Column():
+                    similar_colors = gr.Text(label="Similar Colors")
+                    similar_weights = gr.Text(label="Similar Colors Weight")
+                    similar_palette = gr.Image(label="Similar Colors Palette", width=width)
+                    creative_colors = gr.Text(label="Creative Colors")
+                    creative_weights = gr.Text(label="Creative Colors Weight")
+                    creative_palette = gr.Image(label="Creative Colors Palette", width=width)
+                submit.click(color_recommendation, [img_pil, mask_pil], [similar_colors, similar_weights, similar_palette, creative_colors, creative_weights, creative_palette])
 
-            iface4_3 = gr.Interface(
-                fn=super_resolution,
-                inputs=gr.Image(type="pil", label="Image", width=width),
-                outputs=gr.Image(type="pil", label="Super Resolution", width=1000),
-                title="Super Resolution",
-                allow_flagging="never",
-            )
+            gr.Markdown("""# Super Resolution""")
+            with gr.Accordion("""Super Resolution""", open=False):
+                gr.Markdown(
+                    """
+                    ![super_resolution](https://github.com/sehyeon518/Favorfit-Gradio/assets/84698896/71595e68-e03f-492b-8e2c-a4df6e87a6f6)
+                    """
+                )
+            with gr.Row():
+                with gr.Column():
+                    img_pil = gr.Image(type="pil", label="Image", width=width)
+                    submit = gr.Button(value="Submit", variant="primary")
+                with gr.Column():
+                    result_pil = gr.Image(type="pil", label="Super Resolution", width=1000)
+                submit.click(super_resolution, img_pil, result_pil)
             
-            iface4_4 = gr.Interface(
-                fn=color_enhancement,
-                inputs=gr.Image(type="pil", label="Image", width=width),
-                outputs=gr.Image(type="pil", label="Enhanced", width=width),
-                title="Color Enhancement",
-                allow_flagging="never",
-            )
+            gr.Markdown("""# Color Enhancement""")
+            with gr.Accordion("""Color Enhancement""", open=False):
+                gr.Markdown(
+                    """
+                    <img src="https://github.com/sehyeon518/Favorfit-Gradio/assets/84698896/f6215a13-a837-4749-ba55-991d132023af" width="1000">
+                    """
+                )
+            with gr.Row():
+                with gr.Column():
+                    img_pil = gr.Image(type="pil", label="Image", width=width)
+                    submit = gr.Button(value="Submit", variant="primary")
+                with gr.Column():
+                    result_pil = gr.Image(type="pil", label="Enhanced", width=width)
+                submit.click(color_enhancement, img_pil, result_pil)
 
 demo.launch()
