@@ -33,6 +33,19 @@ def rgba_to_rgb(img_pil):
     return img_pil
 
 
+def rgb_to_rgba(img_pil):
+    if img_pil.mode == "RGB":
+        data = img_pil.getdata()
+        all_gray = all(r == g == b for r, g, b in data)
+        if all_gray:
+            alpha_pixels = [(r, g, b, r) for r, g, b in data]
+            img_pil = Image.new("RGBA", img_pil.size)
+            img_pil.putdata(alpha_pixels)
+        else:
+            img_pil = img_pil.convert("RGBA")
+    return img_pil
+
+
 def reverse_mask(img_pil):
     mask = np.array(img_pil)
     reverse = 255 - mask
@@ -116,14 +129,23 @@ def outpaint(img_pil, mask_pil, checkbox):
     try:
         result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=5)
         result_pil = bs64_to_pil(result_base64)
+        result_pil_rgba = rgb_to_rgba(result_pil)
+        img_pil_rgba = rgb_to_rgba(img_pil)
+        mask_pil_rgba = rgb_to_rgba(mask_pil)
 
-        product_pil = make_outpaint_condition(img_pil, mask_pil)
-        product_pil = product_pil.resize(result_pil.size)
-        
-        mask_pil_gray = mask_pil.resize(result_pil.size).convert("L")
-        composite_pil = Image.new("RGBA", result_pil.size)
-        composite_pil.paste(result_pil, (0,0))
-        composite_pil.paste(product_pil, (0,0), mask_pil_gray)
+        img_pil_rgba = img_pil_rgba.resize(result_pil_rgba.size)
+        mask_pil_rgba = mask_pil_rgba.resize(result_pil_rgba.size)
+
+        gray = mask_pil_rgba.convert("L")
+
+        r, g, b, a = img_pil_rgba.split()
+        product_pil = Image.merge("RGBA", (r, g, b, gray))
+
+        composite_pil = Image.new("RGBA", result_pil_rgba.size)
+        composite_pil.paste(result_pil_rgba, (0,0))
+        composite_pil.paste(product_pil, (0,0), gray)
+        composite_pil = composite_pil.convert("RGB")
+        composite_pil.show()
        
         if checkbox:
             return composite_pil, result_pil, gr.Checkbox(label="Outpainting Original Product", visible=True, value=True)
@@ -163,13 +185,22 @@ def composition(img_pil, mask_pil, checkbox):
     try:
         result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=4)
         result_pil = bs64_to_pil(result_base64)
+        result_pil_rgba = rgb_to_rgba(result_pil)
+        img_pil_rgba = rgb_to_rgba(img_pil)
+        mask_pil_rgba = rgb_to_rgba(mask_pil)
 
-        product_pil = make_outpaint_condition(img_pil, mask_pil).resize(result_pil.size)
-        
-        mask_pil_gray = mask_pil.resize(result_pil.size).convert("L")
-        composite_pil = Image.new("RGBA", result_pil.size)
-        composite_pil.paste(result_pil, (0,0))
-        composite_pil.paste(product_pil, (0,0), mask_pil_gray)
+        img_pil_rgba = img_pil_rgba.resize(result_pil_rgba.size)
+        mask_pil_rgba = mask_pil_rgba.resize(result_pil_rgba.size)
+
+        gray = mask_pil_rgba.convert("L")
+
+        r, g, b, a = img_pil_rgba.split()
+        product_pil = Image.merge("RGBA", (r, g, b, gray))
+
+        composite_pil = Image.new("RGBA", result_pil_rgba.size)
+        composite_pil.paste(result_pil_rgba, (0,0))
+        composite_pil.paste(product_pil, (0,0), gray)
+        composite_pil = composite_pil.convert("RGB")
 
         if checkbox:
             return composite_pil, result_pil, gr.Checkbox(label="Composition Original Product", visible=True, value=True)
