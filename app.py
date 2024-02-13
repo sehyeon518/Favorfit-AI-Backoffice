@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 import requests
 import json
-from utils import make_outpaint_condition, pil_to_bs64, bs64_to_pil
+from utils import composing_output, pil_to_bs64, bs64_to_pil
 import time
 
 
@@ -141,11 +141,7 @@ def outpaint(img_pil, mask_pil, checkbox):
         r, g, b, a = img_pil_rgba.split()
         product_pil = Image.merge("RGBA", (r, g, b, gray))
 
-        composite_pil = Image.new("RGBA", result_pil_rgba.size)
-        composite_pil.paste(result_pil_rgba, (0,0))
-        composite_pil.paste(product_pil, (0,0), gray)
-        composite_pil = composite_pil.convert("RGB")
-        composite_pil.show()
+        composite_pil = composing_output(result_pil_rgba, product_pil, mask_pil_rgba)
        
         if checkbox:
             return composite_pil, result_pil, gr.Checkbox(label="Outpainting Original Product", visible=True, value=True)
@@ -197,10 +193,7 @@ def composition(img_pil, mask_pil, checkbox):
         r, g, b, a = img_pil_rgba.split()
         product_pil = Image.merge("RGBA", (r, g, b, gray))
 
-        composite_pil = Image.new("RGBA", result_pil_rgba.size)
-        composite_pil.paste(result_pil_rgba, (0,0))
-        composite_pil.paste(product_pil, (0,0), gray)
-        composite_pil = composite_pil.convert("RGB")
+        composite_pil = composing_output(result_pil_rgba, product_pil, mask_pil_rgba)
 
         if checkbox:
             return composite_pil, result_pil, gr.Checkbox(label="Composition Original Product", visible=True, value=True)
