@@ -435,7 +435,7 @@ with gr.Blocks() as demo:
                 with gr.Column():
                     mask_pil = gr.Image(type="pil", label="Mask", width=width)
                     masked_pil = gr.Image(type="pil", label="Masked Image", width=width)
-                submit.click(template_augmentation_text, [img_pil, checkbox], [mask_pil, masked_pil])
+                submit.click(remove_bg, [img_pil, checkbox], [mask_pil, masked_pil])
 
             gr.Markdown("""# Recommend Colors""")
             with gr.Accordion("""Recommend Colors""", open=False):
