@@ -111,6 +111,7 @@ def get_result_with_retry(url, headers, get_result_body, max_retries=3, retry_in
 
 # Function 1 Outpainting
 def outpaint(img_pil, mask_pil, checkbox):
+    img_pil = resize512(img_pil)
     if img_pil.size != mask_pil.size:
         mask_pil = mask_pil.resize(img_pil.size)
     img_base64 = pil_to_bs64(img_pil)
@@ -160,6 +161,8 @@ def switch_origin_product(img_a, img_b):
 def composition(img_pil, mask_pil, checkbox):
     img_pil = rgba_to_rgb(img_pil)
     mask_pil = rgba_to_rgb(mask_pil)
+    img_pil = resize512(img_pil)
+    mask_pil = resize512(mask_pil)
     mask_pil_reverse = reverse_mask(mask_pil)
 
     if img_pil.size != mask_pil:
@@ -207,6 +210,7 @@ def composition(img_pil, mask_pil, checkbox):
 # Function 3-1 Template Augmentation Style
 def template_augmentation_style(template_pil, style_pil):
     template_pil = rgba_to_rgb(template_pil)
+    template_pil = resize512(template_pil)
     template_base64 = pil_to_bs64(template_pil)
     style_pil = rgba_to_rgb(style_pil)
     style_pil = style_pil.resize(template_pil.size)
@@ -348,7 +352,7 @@ def super_resolution(img_pil):
 # Function 4-4 Color Enhancement
 def color_enhancement(img_pil):
     img_pil = rgba_to_rgb(img_pil)
-    img_pil = resize512(img_pil)
+    # img_pil = resize512(img_pil)
     img_base64 = pil_to_bs64(img_pil)
 
     url = 'http://192.168.219.114:8000/utils/color_enhancement/'
@@ -496,7 +500,7 @@ with gr.Blocks() as demo:
                 with gr.Column():
                     result_pil = gr.Image(type="pil", label="Super Resolution", width=1000)
                 submit.click(super_resolution, img_pil, result_pil)
-            
+
             gr.Markdown("""# Color Enhancement""")
             with gr.Accordion("""Color Enhancement""", open=False):
                 gr.Markdown(
