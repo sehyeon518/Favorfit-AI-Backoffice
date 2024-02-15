@@ -7,6 +7,9 @@ import requests
 import json
 from utils import composing_output, pil_to_bs64, bs64_to_pil
 import time
+import os
+
+pwd = os.path.dirname(os.path.realpath(__file__))
 
 
 def sketches2coordinates(all_layers):
@@ -373,11 +376,7 @@ with gr.Blocks() as demo:
         with gr.Blocks():
             gr.Markdown("""# Outpaint""")
             with gr.Accordion("""Outpaint""", open=False):
-                gr.Markdown(
-                    """
-                    ![outpaint](https://github.com/sehyeon518/Favorfit-Gradio/assets/84698896/8bc3ce6f-15dc-462b-a6c8-7702f23ba317)
-                    """
-                )
+                gr.Image(type="filepath", value=os.path.join(pwd, "favorfit_ai_gif", "4_outpaint.gif"))
             with gr.Row():
                 with gr.Column():
                     img_pil = gr.Image(type="pil", label="Image", width=width)
@@ -394,11 +393,7 @@ with gr.Blocks() as demo:
         with gr.Blocks():
             gr.Markdown("""# Composition""")
             with gr.Accordion("""Composition""", open=False):
-                gr.Markdown(
-                    """
-                    ![composition](https://github.com/sehyeon518/Favorfit-Gradio/assets/84698896/60f15213-03de-458c-bad4-038f8080a1c9)
-                    """
-                )
+                gr.Image(type="filepath", value=os.path.join(pwd, "favorfit_ai_gif", "5_composition.gif"))
             with gr.Row():
                 with gr.Column():
                     img_pil = gr.Image(type="pil", label="Image", width=width)
@@ -415,11 +410,7 @@ with gr.Blocks() as demo:
         with gr.Column():
             gr.Markdown("""# Template Augmentation Style""")
             with gr.Accordion("""Template Augmentation - Style""", open=False):
-                gr.Markdown(
-                    """
-                    ![augmentation_style](https://github.com/sehyeon518/Favorfit-Gradio/assets/84698896/aeaf3259-e393-4d9d-8471-422bf125c89b)
-                    """
-                )     
+                gr.Image(type="filepath", value=os.path.join(pwd, "favorfit_ai_gif", "7_template_style.gif"))
             with gr.Row():
                 with gr.Column():
                     img_pil = gr.Image(type="pil", label="Template", width=width)
@@ -431,11 +422,7 @@ with gr.Blocks() as demo:
             
             gr.Markdown("""# Template Augmentation Text""")
             with gr.Accordion("""Template Augmentation - Text""", open=False):
-                gr.Markdown(
-                    """
-                    ![augmentation_text](https://github.com/sehyeon518/Favorfit-Gradio/assets/84698896/6cf96628-b5a1-466f-a82c-707a93cf0fbc)
-                    """
-                )
+                gr.Image(type="filepath", value=os.path.join(pwd, "favorfit_ai_gif", "8_template_text.gif"))
             with gr.Row():
                 with gr.Column():
                     img_pil = gr.Image(type="pil", label="Template", width=width)
@@ -450,11 +437,7 @@ with gr.Blocks() as demo:
         with gr.Column():
             gr.Markdown("""# Remove Background""")
             with gr.Accordion("""Remove Background""", open=False):
-                gr.Markdown(
-                    """
-                    ![remove_background](https://github.com/sehyeon518/Favorfit-Gradio/assets/84698896/9dad4f24-2dbe-4c26-8b7c-f9e76b7daae3)
-                    """
-                )
+                gr.Image(type="filepath", value=os.path.join(pwd, "favorfit_ai_gif", "2_remove_background_resize.gif"))
             with gr.Row():
                 with gr.Column():
                     img_pil = gr.ImageEditor(type="pil", label="Image", width=width)
@@ -467,11 +450,7 @@ with gr.Blocks() as demo:
 
             gr.Markdown("""# Recommend Colors""")
             with gr.Accordion("""Recommend Colors""", open=False):
-                gr.Markdown(
-                    """
-                    ![recommend_colors](https://github.com/sehyeon518/Favorfit-Gradio/assets/84698896/8b15b971-8ab6-4dd0-b4e5-179a7b7d2444)
-                    """
-                )
+                gr.Image(type="filepath", value=os.path.join(pwd, "favorfit_ai_gif", "3_recommend_colors.gif"))
             with gr.Row():
                 with gr.Column():
                     img_pil = gr.Image(type="pil", label="Image", width=width)
@@ -488,11 +467,7 @@ with gr.Blocks() as demo:
 
             gr.Markdown("""# Super Resolution""")
             with gr.Accordion("""Super Resolution""", open=False):
-                gr.Markdown(
-                    """
-                    ![super_resolution](https://github.com/sehyeon518/Favorfit-Gradio/assets/84698896/71595e68-e03f-492b-8e2c-a4df6e87a6f6)
-                    """
-                )
+                gr.Image(type="filepath", value=os.path.join(pwd, "favorfit_ai_gif", "6_super_resolution.gif"))
             with gr.Row():
                 with gr.Column():
                     img_pil = gr.Image(type="pil", label="Image", width=width)
@@ -503,11 +478,7 @@ with gr.Blocks() as demo:
 
             gr.Markdown("""# Color Enhancement""")
             with gr.Accordion("""Color Enhancement""", open=False):
-                gr.Markdown(
-                    """
-                    <img src="https://github.com/sehyeon518/Favorfit-Gradio/assets/84698896/f6215a13-a837-4749-ba55-991d132023af" width="1000">
-                    """
-                )
+                gr.Image(type="filepath", value=os.path.join(pwd, "favorfit_ai_gif", "1_color_enhancement.gif"))
             with gr.Row():
                 with gr.Column():
                     img_pil = gr.Image(type="pil", label="Image", width=width)
