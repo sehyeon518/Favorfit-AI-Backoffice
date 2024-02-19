@@ -376,7 +376,7 @@ with gr.Blocks() as demo:
         with gr.Blocks():
             gr.Markdown("""# Outpaint""")
             with gr.Accordion("""Outpaint""", open=False):
-                gr.Image(type="filepath", value=os.path.join(pwd, "favorfit_ai_gif", "4_outpaint.gif"))
+                gr.Image(type="filepath", value=os.path.join(pwd, "favorfit_ai_gif", "4_outpaint_2.gif"))
             with gr.Row():
                 with gr.Column():
                     img_pil = gr.Image(type="pil", label="Image", width=width)
@@ -393,7 +393,7 @@ with gr.Blocks() as demo:
         with gr.Blocks():
             gr.Markdown("""# Composition""")
             with gr.Accordion("""Composition""", open=False):
-                gr.Image(type="filepath", value=os.path.join(pwd, "favorfit_ai_gif", "5_composition.gif"))
+                gr.Image(type="filepath", value=os.path.join(pwd, "favorfit_ai_gif", "5_composition_2.gif"))
             with gr.Row():
                 with gr.Column():
                     img_pil = gr.Image(type="pil", label="Image", width=width)
@@ -410,7 +410,7 @@ with gr.Blocks() as demo:
         with gr.Column():
             gr.Markdown("""# Template Augmentation Style""")
             with gr.Accordion("""Template Augmentation - Style""", open=False):
-                gr.Image(type="filepath", value=os.path.join(pwd, "favorfit_ai_gif", "7_template_style.gif"))
+                gr.Image(type="filepath", value=os.path.join(pwd, "favorfit_ai_gif", "7_template_style_2.gif"))
             with gr.Row():
                 with gr.Column():
                     img_pil = gr.Image(type="pil", label="Template", width=width)
@@ -422,7 +422,7 @@ with gr.Blocks() as demo:
             
             gr.Markdown("""# Template Augmentation Text""")
             with gr.Accordion("""Template Augmentation - Text""", open=False):
-                gr.Image(type="filepath", value=os.path.join(pwd, "favorfit_ai_gif", "8_template_text.gif"))
+                gr.Image(type="filepath", value=os.path.join(pwd, "favorfit_ai_gif", "8_template_text_2.gif"))
             with gr.Row():
                 with gr.Column():
                     img_pil = gr.Image(type="pil", label="Template", width=width)
