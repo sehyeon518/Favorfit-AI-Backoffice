@@ -90,7 +90,7 @@ def resize512(img_pil):
     return resized_img
 
 
-def get_result_with_retry(url, headers, get_result_body, max_retries=3, retry_interval=4):
+def get_result_with_retry(url, headers, get_result_body, max_retries=3, retry_interval=3):
     retries = 0
     print("get image start")
     while retries < max_retries:
@@ -131,7 +131,7 @@ def outpaint(img_pil, mask_pil, checkbox):
     get_result_body = {"request_id":request_id}
 
     try:
-        result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=5)
+        result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=3)
         result_pil = bs64_to_pil(result_base64)
         result_pil_rgba = rgb_to_rgba(result_pil)
         img_pil_rgba = rgb_to_rgba(img_pil)
@@ -185,7 +185,7 @@ def composition(img_pil, mask_pil, checkbox):
     get_result_body = {"request_id": request_id}
 
     try:
-        result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=4)
+        result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=3)
         result_pil = bs64_to_pil(result_base64)
         result_pil_rgba = rgb_to_rgba(result_pil)
         img_pil_rgba = rgb_to_rgba(img_pil)
@@ -230,7 +230,7 @@ def template_augmentation_style(template_pil, style_pil):
     get_result_body = {"request_id":request_id}
 
     try:
-        result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=5)
+        result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=3)
         result_pil = bs64_to_pil(result_base64)
         return result_pil
     except TimeoutError as e:
@@ -343,7 +343,7 @@ def super_resolution(img_pil):
     get_result_body = {"request_id": request_id}
     
     try:
-        result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=4)
+        result_base64 = get_result_with_retry(url, headers, get_result_body, max_retries=10, retry_interval=3)
         result_pil = bs64_to_pil(result_base64)
         return result_pil
     except TimeoutError as e:
