@@ -10,7 +10,7 @@ import time
 import os
 
 pwd = os.path.dirname(os.path.realpath(__file__))
-
+request_url = "http://49.50.161.221:8000/"
 
 def sketches2coordinates(all_layers):
     combined_image = np.zeros_like(resize512(all_layers[0]))
@@ -120,14 +120,14 @@ def outpaint(img_pil, mask_pil, checkbox):
     img_base64 = pil_to_bs64(img_pil)
     mask_base64 = pil_to_bs64(mask_pil)
 
-    url = "http://192.168.219.114:8000/diffusion/outpaint/"
+    url = request_url + "diffusion/outpaint/"
     headers = {'Content-Type': 'application/json'}
 
     request_id = hashlib.sha256(img_base64.encode()).hexdigest()
     outpaint_body = {"image_b64":img_base64, "mask_b64":mask_base64, "request_id":request_id}
     response = requests.post(url, headers=headers, data=json.dumps({"body":outpaint_body}))
 
-    url = "http://192.168.219.114:8000/get_result/"
+    url = request_url + "get_result/"
     get_result_body = {"request_id":request_id}
 
     try:
@@ -174,14 +174,14 @@ def composition(img_pil, mask_pil, checkbox):
     img_base64 = pil_to_bs64(img_pil)
     mask_base64 = pil_to_bs64(mask_pil_reverse)
 
-    url = 'http://192.168.219.114:8000/diffusion/composition/'
+    url = request_url + 'diffusion/composition/'
     headers = {'Content-Type': 'application/json'}
 
     request_id = hashlib.sha256(img_base64.encode()).hexdigest()
     composition_body = {"image_b64":img_base64, "mask_b64":mask_base64, "request_id":request_id}
     response = requests.post(url, headers=headers, data=json.dumps({"body":composition_body}))
 
-    url = "http://192.168.219.114:8000/get_result/"
+    url = request_url + "get_result/"
     get_result_body = {"request_id": request_id}
 
     try:
@@ -219,14 +219,14 @@ def template_augmentation_style(template_pil, style_pil):
     style_pil = style_pil.resize(template_pil.size)
     style_base64 = pil_to_bs64(style_pil)
 
-    url = "http://192.168.219.114:8000/diffusion/augmentation/style/"
+    url = request_url + "diffusion/augmentation/style/"
     headers = {"Content-Type": "application/json"}
 
     request_id = hashlib.sha256(template_base64.encode()).hexdigest()
     augmentation_style_body = {"image_b64_base":template_base64, "image_b64_style":style_base64, "request_id":request_id}
     response = requests.post(url, headers=headers, data=json.dumps({"body":augmentation_style_body}))
 
-    url = "http://192.168.219.114:8000/get_result/"
+    url = request_url + "get_result/"
     get_result_body = {"request_id":request_id}
 
     try:
@@ -244,14 +244,14 @@ def template_augmentation_text(img_pil, color, concept):
     img_pil = rgba_to_rgb(img_pil)
     img_base64 = pil_to_bs64(img_pil)
 
-    url = "http://192.168.219.114:8000/diffusion/augmentation/text/"
+    url = request_url + "diffusion/augmentation/text/"
     headers = {'Content-Type': 'application/json'}
 
     request_id = hashlib.sha256(img_base64.encode()).hexdigest()
     augmentation_text_body = {"image_b64":img_base64, "color":color, "concept":concept, "request_id":request_id}
     response = requests.post(url, headers=headers, data=json.dumps({"body":augmentation_text_body}))
 
-    url = "http://192.168.219.114:8000/get_result/"
+    url = request_url + "get_result/"
     get_result_body = {"request_id":request_id}
 
     try:
@@ -271,7 +271,7 @@ def remove_bg(img_list, post_processing):
     img_base64 = pil_to_bs64(img_pil)
     coordinates = sketches2coordinates(img_list["layers"])
 
-    url = 'http://192.168.219.114:8000/utils/remove_bg/'
+    url = request_url + 'utils/remove_bg/'
     headers = {'Content-Type': 'application/json'}
 
     remove_bg_body = {"image_b64":img_base64, "post_process":post_processing, "box":coordinates}
@@ -299,7 +299,7 @@ def color_recommendation(img_pil, mask_pil):
     
     mask_base64 = None if mask_pil is None else pil_to_bs64(resize512(mask_pil))
 
-    url = 'http://192.168.219.114:8000/utils/recommend_colors/'
+    url = request_url + 'utils/recommend_colors/'
     headers = {'Content-Type': 'application/json'}
 
     recommend_colors_body = {"image_b64":img_base64, "mask_b64": mask_base64}
@@ -332,14 +332,14 @@ def super_resolution(img_pil):
     
     img_base64 = pil_to_bs64(img_pil)
 
-    url = "http://192.168.219.114:8000/utils/super_resolution/"
+    url = request_url + "utils/super_resolution/"
     headers = {'Content-Type': 'application/json'}
 
     request_id = hashlib.sha256(img_base64.encode()).hexdigest()
     super_resolution_body = {"image_b64":img_base64, "request_id":request_id}
     response = requests.post(url, headers=headers, data=json.dumps({"body":super_resolution_body}))
 
-    url = "http://192.168.219.114:8000/get_result/"
+    url = request_url + "get_result/"
     get_result_body = {"request_id": request_id}
     
     try:
@@ -358,7 +358,7 @@ def color_enhancement(img_pil):
     # img_pil = resize512(img_pil)
     img_base64 = pil_to_bs64(img_pil)
 
-    url = 'http://192.168.219.114:8000/utils/color_enhancement/'
+    url = request_url + 'utils/color_enhancement/'
     headers = {'Content-Type': 'application/json'}
 
     color_enhancement_body = {"image_b64":img_base64, "gamma":0.75, "factor":1.2}
@@ -487,4 +487,4 @@ with gr.Blocks() as demo:
                     result_pil = gr.Image(type="pil", label="Enhanced", width=width)
                 submit.click(color_enhancement, img_pil, result_pil)
 
-demo.launch()
+demo.launch(share=True)
